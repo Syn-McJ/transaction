@@ -6,11 +6,9 @@ import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import com.example.transaction.repository.KeyValueStorage
 
-data class MainScreenUIState(
+data class KeyValueInputState(
     val key: String = "",
     val value: String = "",
-    val pickedCommand: CommandView = CommandView.all.first(),
-    val history: String = "",
     val keyError: Boolean = false,
     val valueError: Boolean = false
 )
@@ -18,40 +16,45 @@ data class MainScreenUIState(
 class MainViewModel(
     private val storage: KeyValueStorage
 ): ViewModel() {
-    var uiState by mutableStateOf(MainScreenUIState())
+    var inputState by mutableStateOf(KeyValueInputState())
         private set
 
+    var pickedCommand by mutableStateOf<CommandView>(CommandView.Get)
+        private set
+
+    var history by mutableStateOf("")
+
     fun executeCommand() {
-        val key = uiState.key
-        val value = uiState.value
+        val key = inputState.key
+        val value = inputState.value
 
         try {
-            val result = runCommand(uiState.pickedCommand, key.trim(), value.trim())
-            val resultRow = result?.let { "\n$it" } ?: ""
-            uiState = uiState.copy(
+            inputState = inputState.copy(
                 key = "",
                 value = "",
-                history = uiState.history + "\n> ${uiState.pickedCommand.name} $key $value$resultRow"
             )
+            val result = runCommand(pickedCommand, key.trim(), value.trim())
+            val resultRow = result?.let { "\n$it" } ?: ""
+            history += "\n> ${pickedCommand.name} $key $value$resultRow"
         } catch (ex: IllegalArgumentException) {
-            uiState = if (uiState.pickedCommand.hasKey && key.isEmpty()) {
-                uiState.copy(keyError = true)
+            inputState = if (pickedCommand.hasKey && key.isEmpty()) {
+                inputState.copy(keyError = true)
             } else {
-                uiState.copy(valueError = true)
+                inputState.copy(valueError = true)
             }
         }
     }
 
     fun pickCommand(command: CommandView) {
-        uiState = uiState.copy(pickedCommand = command)
+        pickedCommand = command
     }
 
     fun setKey(key: String) {
-        uiState = uiState.copy(key = key, keyError = false)
+        inputState = inputState.copy(key = key, keyError = false)
     }
 
     fun setValue(value: String) {
-        uiState = uiState.copy(value = value, valueError = false)
+        inputState = inputState.copy(value = value, valueError = false)
     }
 
     private fun runCommand(command: CommandView, key: String, value: String): String? {

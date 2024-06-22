@@ -60,7 +60,7 @@ fun MainScreen(
             .padding(20.dp)
     ) {
         MultiLineTextView(
-            text = viewModel.uiState.history,
+            text = viewModel.history,
             modifier = Modifier
                 .weight(1f)
                 .fillMaxWidth()
@@ -69,8 +69,8 @@ fun MainScreen(
 
         var commandToConfirm by remember { mutableStateOf<CommandView?>(null) }
         val confirmOrExecute = {
-            if (viewModel.uiState.pickedCommand.confirmationRequired) {
-                commandToConfirm = viewModel.uiState.pickedCommand
+            if (viewModel.pickedCommand.confirmationRequired) {
+                commandToConfirm = viewModel.pickedCommand
             } else {
                 viewModel.executeCommand()
                 commandToConfirm = null
@@ -157,7 +157,7 @@ fun CommandPicker(
     ) {
         Row(modifier = Modifier.fillMaxWidth()) {
             Text(
-                text = viewModel.uiState.pickedCommand.name,
+                text = viewModel.pickedCommand.name,
                 modifier = Modifier
                     .weight(1f)
                     .align(Alignment.CenterVertically)
@@ -173,7 +173,7 @@ fun CommandPicker(
                     expanded = expanded,
                     onDismissRequest = { expanded = false },
                 ) {
-                    CommandView.all.forEach { command ->
+                    allCommands.forEach { command ->
                         DropdownMenuItem(
                             text = { Text(command.name) },
                             onClick = {
@@ -247,20 +247,20 @@ fun KeyValueInput(
     val focusRequester = remember { FocusRequester() }
 
     Row(modifier = modifier) {
-        if (viewModel.uiState.pickedCommand.hasKey) {
-            LaunchedEffect(viewModel.uiState.key) {
-                if (viewModel.uiState.key.isEmpty()) {
+        if (viewModel.pickedCommand.hasKey) {
+            LaunchedEffect(viewModel.inputState.key) {
+                if (viewModel.inputState.key.isEmpty()) {
                     focusRequester.requestFocus()
                 }
             }
 
             TextField(
-                value = viewModel.uiState.key,
+                value = viewModel.inputState.key,
                 onValueChange = { viewModel.setKey(it) },
                 label = { Text("Key") },
-                isError = viewModel.uiState.keyError,
+                isError = viewModel.inputState.keyError,
                 keyboardOptions = KeyboardOptions.Default.copy(
-                    imeAction = if (viewModel.uiState.pickedCommand.hasValue) ImeAction.Next else ImeAction.Done
+                    imeAction = if (viewModel.pickedCommand.hasValue) ImeAction.Next else ImeAction.Done
                 ),
                 keyboardActions = KeyboardActions(
                     onDone = { confirmOrExecute() }
@@ -272,12 +272,12 @@ fun KeyValueInput(
             )
         }
 
-        if (viewModel.uiState.pickedCommand.hasValue) {
+        if (viewModel.pickedCommand.hasValue) {
             TextField(
-                value = viewModel.uiState.value,
+                value = viewModel.inputState.value,
                 onValueChange = { viewModel.setValue(it) },
                 label = { Text("Value") },
-                isError = viewModel.uiState.valueError,
+                isError = viewModel.inputState.valueError,
                 keyboardOptions = KeyboardOptions.Default.copy(
                     imeAction = ImeAction.Done
                 ),
